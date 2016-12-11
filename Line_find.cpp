@@ -16,6 +16,9 @@ public:
   float length(){
     return sqrt((float(l[2] - l[0]) * (l[2] - l[0])) + float((l[3] - l[1]) * (l[3] - l[1])));
   }
+  float slope(){
+   return (float)(l[3] - l[1]) / (float)(l[2] - l[0]);
+  }
 }LINES;
 
 
@@ -24,6 +27,13 @@ int main(int argc, char* argv[]) {
   Mat image= cv::imread(argv[1]);
   if (!image.data){return -1;}
 
+  //Mat imageGreen;
+
+  //inRange(image, Scalar(50, 50, 50), Scalar(80,80,80), imageGreen);
+
+  //imshow("imageGreen", imageGreen);
+  //waitKey(0);
+
   Mat src_gray;
   /// Convert the image to grayscale
   cvtColor( image, src_gray, CV_BGR2GRAY );
@@ -31,7 +41,7 @@ int main(int argc, char* argv[]) {
   Mat contours;
   /// Reduce noise with a kernel 3x3
   blur( src_gray, contours, Size(3,3) );
-  int threshold = 98;
+  int threshold = 223;
   Canny(contours,contours, threshold, threshold*3, 3);
 
   blur( contours, contours, Size(3,3) );
@@ -69,9 +79,9 @@ int main(int argc, char* argv[]) {
   for( size_t i = 0; i < lines.size(); i++ )
   {
     L = detect_lines[i].length();
-    if(L == max || L == second_max){
-    //if(L >= mean){
-      printf("%f\n", L);
+    //if(L == max || L == second_max){
+    if(L >= mean && detect_lines[i].slope() > 0){
+      printf("length : %f\tSlope : %f\n", L, detect_lines[i].slope());
       line( image, Point(detect_lines[i].l[0], detect_lines[i].l[1]), Point(detect_lines[i].l[2], detect_lines[i].l[3]), Scalar(0,0,255), 3, CV_AA);
     }
     
@@ -80,6 +90,6 @@ int main(int argc, char* argv[]) {
   imshow("line", image);
   /// Wait until user exit program by pressing a key
   waitKey(0);
-
+  
   return 0;
 }

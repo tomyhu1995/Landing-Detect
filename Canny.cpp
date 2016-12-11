@@ -12,7 +12,7 @@ Mat dst, detected_edges;
 
 int edgeThresh = 1;
 int lowThreshold;
-int const max_lowThreshold = 220;
+int const max_lowThreshold = 250;
 int ratio = 3;
 int kernel_size = 3;
 char* window_name = "Edge Map";
@@ -29,9 +29,12 @@ void CannyThreshold(int, void*)
   /// Canny detector
   Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
 
+  vector<Vec4i> lines;
+  HoughLinesP(detected_edges, lines, 1, CV_PI/180, 50, 50, 10 );
+
   /// Using Canny's output as a mask, we display our result
   dst = Scalar::all(0);
-
+  printf("number of lines = %d\n", lines.size());
   src.copyTo( dst, detected_edges);
   imshow( window_name, dst );
  }
