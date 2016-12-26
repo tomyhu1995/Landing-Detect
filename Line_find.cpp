@@ -28,6 +28,7 @@ public:
   int y;
 }POINT;
 
+
 LINES *LINES_detect(Mat image, int threshold, int *number_of_lines){
   Mat src_gray;
   /// Convert the image to grayscale
@@ -71,7 +72,7 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
   int left_x = 0, left_y = 0, right_x = 0, right_y = 0, left_count = 0, right_count = 0;
   POINT middle_point;
 
-  printf("\n\n");
+  printf("\n");
   for( int i = 0; i < number_of_lines; i++ )
   {
     L = detect_lines[i].length();
@@ -106,18 +107,60 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
   return middle_point;
 }
 
-int main(int argc, char* argv[]) {
-  // Read input image
+int learning_machine(Mat image, float real_height){
   int number_of_lines;
-  Mat image= cv::imread(argv[1]);
-  if (!image.data){return -1;}
+  if (!image.data){
+    printf("input_image is empty\n");
+    return -1;
+  }
+  float positive_slope = 0, negative_slope = 0;
+  int positive_count = 0, negative_count = 0;
 
   LINES *detect_lines = LINES_detect(image, 223, &number_of_lines);
+
+  for(int i = 0; i < number_of_lines; i++){
+    if(detect_lines[i].slope() <0){
+      negative_slope += detect_lines[i].slope();
+      negative_count++;
+    }else{
+      positive_slope += detect_lines[i].slope();
+      positive_count++;
+    }
+  }
+
+  negative_slope = negative_slope / negative_count;
+  positive_slope = positive_slope / positive_count;
+
+  printf("Mean negative_slope = %f, mean positive_slope = %f\n", negative_slope, positive_slope);
+
   float mean = Mean_length(detect_lines, number_of_lines);
 
   POINT middle_point = find_middle_point(detect_lines, number_of_lines, mean);
+
+  Ref_Base new_node;
+  new_node.height = real_height;
+  new_node.positive_slope = positive_slope;
+  new_node.negative_slope = negative_slope;
+  new_node.middle_point.x = middle_point.x;
+  new_node.middle_point.y = middle_point.y;
+  new_node.Left_next = NULL;
+  new_node.Right_next = NULL;
+
+}
+
+int main(int argc, char* argv[]) {
+  // Read input image
   
-  printf("middle point(%d,%d)\n",middle_point.x, middle_point.y);
+  Mat image= cv::imread(argv[1]);
+
+  if(!image.data){
+    printf("empty data\n");
+    return -1;
+  }
+  
+  learning_machine(image, 50);
+  
+  //printf("middle point(%d,%d)\n",middle_point.x, middle_point.y);
   /// Wait until user exit program by pressing a key
   //waitKey(0);
   
