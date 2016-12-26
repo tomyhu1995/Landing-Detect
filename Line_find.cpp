@@ -73,12 +73,13 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
   POINT middle_point;
 
   printf("\n");
+  printf("number_of_lines = %d\tmean = %f\n", number_of_lines, mean);
   for( int i = 0; i < number_of_lines; i++ )
   {
     L = detect_lines[i].length();
     //if(L == max || L == second_max){
+    printf("No.%d => length : %f\tSlope : %f\tStart (%d,%d), End(%d,%d)\n", i, L, detect_lines[i].slope(), detect_lines[i].l[0], detect_lines[i].l[1], detect_lines[i].l[2], detect_lines[i].l[3]);
     if(L >= mean){
-      printf("length : %f\tSlope : %f\tStart (%d,%d), End(%d,%d)\n", L, detect_lines[i].slope(), detect_lines[i].l[0], detect_lines[i].l[1], detect_lines[i].l[2], detect_lines[i].l[3]);
       //line( image, Point(detect_lines[i].l[0], detect_lines[i].l[1]), Point(detect_lines[i].l[2], detect_lines[i].l[3]), Scalar(0,0,255), 3, CV_AA);
       if(detect_lines[i].slope() > 0){
         right_x += detect_lines[i].l[0];
@@ -90,15 +91,19 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
         left_count++;
       }
     }
-    
   }
 
-  left_x = left_x / left_count;
-  right_x = right_x / right_count;
+  printf("right_count = %d, left_count = %d\n", right_count, left_count );
+  if(right_count != 0){
+    right_x = right_x / right_count;
+    right_y = right_y / right_count;
+  }
 
-  left_y = left_y / left_count;
-  right_y = right_y / right_count;
-
+  if(left_count != 0){
+    left_x = left_x / left_count;
+    left_y = left_y / left_count;
+  }
+  
   middle_point.x = (right_x+left_x) /2;
   middle_point.y = (right_y+left_y) /2;
 
@@ -136,15 +141,7 @@ int learning_machine(Mat image, float real_height){
   float mean = Mean_length(detect_lines, number_of_lines);
 
   POINT middle_point = find_middle_point(detect_lines, number_of_lines, mean);
-
-  Ref_Base new_node;
-  new_node.height = real_height;
-  new_node.positive_slope = positive_slope;
-  new_node.negative_slope = negative_slope;
-  new_node.middle_point.x = middle_point.x;
-  new_node.middle_point.y = middle_point.y;
-  new_node.Left_next = NULL;
-  new_node.Right_next = NULL;
+  //printf("middle_point x = %d, y = %d\n", middle_point.x, middle_point.y);
 
 }
 
