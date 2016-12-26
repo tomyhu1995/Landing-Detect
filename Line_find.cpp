@@ -28,6 +28,11 @@ public:
   int y;
 }POINT;
 
+typedef struct _REF_{
+  float neg_slope;
+  float pos_slope;
+  POINT middle_point;
+}Reference;
 
 LINES *LINES_detect(Mat image, int threshold, int *number_of_lines){
   Mat src_gray;
@@ -112,7 +117,7 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
   return middle_point;
 }
 
-int learning_machine(Mat image, float real_height){
+int learning_machine(Mat image, Reference *Ref_sig){
   int number_of_lines;
   if (!image.data){
     printf("input_image is empty\n");
@@ -143,19 +148,89 @@ int learning_machine(Mat image, float real_height){
   POINT middle_point = find_middle_point(detect_lines, number_of_lines, mean);
   //printf("middle_point x = %d, y = %d\n", middle_point.x, middle_point.y);
 
+  Ref_sig->neg_slope = negative_slope;
+  Ref_sig->pos_slope = positive_slope;
+  Ref_sig->middle_point = middle_point;
+}
+
+int classfier_machine(Mat image, Reference Ref_sig){
+  int number_of_lines;
+  if (!image.data){
+    printf("input_image is empty\n");
+    return -1;
+  }
+  float positive_slope = 0, negative_slope = 0;
+  int positive_count = 0, negative_count = 0;
+
+  LINES *detect_lines = LINES_detect(image, 223, &number_of_lines);
+
+  for(int i = 0; i < number_of_lines; i++){
+    if(detect_lines[i].slope() <0){
+      negative_slope += detect_lines[i].slope();
+      negative_count++;
+    }else{
+      positive_slope += detect_lines[i].slope();
+      positive_count++;
+    }
+  }
+
+  negative_slope = negative_slope / negative_count;
+  positive_slope = positive_slope / positive_count;
+
+  printf("Mean negative_slope = %f, mean positive_slope = %f\n", negative_slope, positive_slope);
+
+  float mean = Mean_length(detect_lines, number_of_lines);
+
+  POINT middle_point = find_middle_point(detect_lines, number_of_lines, mean);
+  //printf("middle_point x = %d, y = %d\n", middle_point.x, middle_point.y);
+
+  
 }
 
 int main(int argc, char* argv[]) {
   // Read input image
   
-  Mat image= cv::imread(argv[1]);
+  Mat image;
+  char file_path[20] = {0};
+  int command;
+  Reference Ref_sig;
+  
+  printf("------------------Welcome to UAV auto landing system------------------\n");
+  while(1){
+    printf("Training or Runing ? Training : 1, Running : 2, exit : 0 ---> ");
+    scanf("%d", &command);
 
-  if(!image.data){
-    printf("empty data\n");
-    return -1;
+    if(command == 1){
+      memset(&Ref_sig, 0, sizeof(Reference));
+      printf("\n------------------Training phase------------------\n\n");
+      printf("file_path = ");
+      scanf("%s", file_path);
+      image = cv::imread(file_path);
+      
+      if(!image.data){
+        printf("empty data\n");
+        return -1;
+      }
+
+      learning_machine(image, &Ref_sig);
+      printf("Ref_sig.neg_slope = %f\n", Ref_sig.neg_slope);
+      printf("Ref_sig.pos_slope = %f\n", Ref_sig.pos_slope);
+      printf("Ref_sig.middle_point.x = %d, Ref_sig.middle_point.y = %d\n", Ref_sig.middle_point.x, Ref_sig.middle_point.y);
+    
+      memset(file_path, 0, sizeof(file_path));
+      printf("\n------------------End of training phase------------------\n\n");
+    }else if(command == 2){
+      printf("\n------------------Running phase------------------\n\n");
+      //running mode function
+      printf("\n------------------End of running phase------------------\n\n");
+    }else if(command == 0){
+      printf("------------------Thanks for your using------------------\n");
+      break;
+    }else{
+      printf("No good input\n");
+    }
   }
   
-  learning_machine(image, 50);
   
   //printf("middle point(%d,%d)\n",middle_point.x, middle_point.y);
   /// Wait until user exit program by pressing a key
