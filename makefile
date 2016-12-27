@@ -15,7 +15,7 @@ SRC = ./Line_find
 
 LDFLAG = 
 LDFLAG += `pkg-config --cflags opencv` `pkg-config --libs opencv`
-LDFLAG += -lsqlite3
+#LDFLAG += -lsqlite3
 
 SRC_FILES =  $(addsuffix .cpp, $(SRC))
 OBJ_FILES =  $(addsuffix .o, $(SRC))

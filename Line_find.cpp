@@ -8,6 +8,8 @@
 
 #define PI 3.1415926
 
+#define DIFF_RANGE 0.02
+
 using namespace cv;
 
 typedef struct lines_{
@@ -84,7 +86,7 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
     L = detect_lines[i].length();
     //if(L == max || L == second_max){
     printf("No.%d => length : %f\tSlope : %f\tStart (%d,%d), End(%d,%d)\n", i, L, detect_lines[i].slope(), detect_lines[i].l[0], detect_lines[i].l[1], detect_lines[i].l[2], detect_lines[i].l[3]);
-    if(L >= mean){
+    //if(L >= mean){
       //line( image, Point(detect_lines[i].l[0], detect_lines[i].l[1]), Point(detect_lines[i].l[2], detect_lines[i].l[3]), Scalar(0,0,255), 3, CV_AA);
       if(detect_lines[i].slope() > 0){
         right_x += detect_lines[i].l[0];
@@ -95,7 +97,7 @@ POINT find_middle_point(LINES *detect_lines, int number_of_lines, float mean){
         left_y += detect_lines[i].l[3];
         left_count++;
       }
-    }
+    //}
   }
 
   printf("right_count = %d, left_count = %d\n", right_count, left_count );
@@ -151,6 +153,8 @@ int learning_machine(Mat image, Reference *Ref_sig){
   Ref_sig->neg_slope = negative_slope;
   Ref_sig->pos_slope = positive_slope;
   Ref_sig->middle_point = middle_point;
+
+  //circle(image, Point(middle_point.x, middle_point.y), 5, Scalar(0,0,255), 1, 8, 0);
 }
 
 int classfier_machine(Mat image, Reference Ref_sig){
@@ -184,6 +188,30 @@ int classfier_machine(Mat image, Reference Ref_sig){
   POINT middle_point = find_middle_point(detect_lines, number_of_lines, mean);
   //printf("middle_point x = %d, y = %d\n", middle_point.x, middle_point.y);
 
+  printf("\n******************Landing guide******************\n");
+  printf("=================Height guidness=================\n");
+  if(positive_slope < Ref_sig.pos_slope || negative_slope > Ref_sig.neg_slope){
+    if(abs(positive_slope - Ref_sig.pos_slope) > DIFF_RANGE || abs(negative_slope - Ref_sig.neg_slope) > DIFF_RANGE){
+      printf("Too Low !!\n");
+    }else{
+      printf("Good for landing\n");
+    }
+  }else if(positive_slope > Ref_sig.pos_slope || negative_slope < Ref_sig.neg_slope){
+    if(abs(positive_slope - Ref_sig.pos_slope) > DIFF_RANGE || abs(negative_slope - Ref_sig.neg_slope) > DIFF_RANGE){
+      printf("Too high!!\n");
+    }else{
+      printf("Good for landing\n");
+    }
+  }
+  printf("=================Direction guidness=================\n");
+  if(abs(middle_point.x - Ref_sig.middle_point.x) > DIFF_RANGE){
+    if(middle_point.x < Ref_sig.middle_point.x){
+      printf("You need to turn left\n");
+    }else{
+      printf("You need to turn right\n");
+    }
+  }
+
   
 }
 
@@ -194,6 +222,7 @@ int main(int argc, char* argv[]) {
   char file_path[20] = {0};
   int command;
   Reference Ref_sig;
+  memset(&Ref_sig, 0, sizeof(Reference));
   
   printf("------------------Welcome to UAV auto landing system------------------\n");
   while(1){
@@ -221,7 +250,20 @@ int main(int argc, char* argv[]) {
       printf("\n------------------End of training phase------------------\n\n");
     }else if(command == 2){
       printf("\n------------------Running phase------------------\n\n");
-      //running mode function
+      printf("file_path = ");
+      scanf("%s", file_path);
+      
+      image = cv::imread(file_path);
+      
+      if(!image.data){
+        printf("empty data\n");
+        return -1;
+      }
+
+      classfier_machine(image, Ref_sig);
+      
+      memset(file_path, 0, sizeof(file_path));
+
       printf("\n------------------End of running phase------------------\n\n");
     }else if(command == 0){
       printf("------------------Thanks for your using------------------\n");
@@ -230,11 +272,6 @@ int main(int argc, char* argv[]) {
       printf("No good input\n");
     }
   }
-  
-  
-  //printf("middle point(%d,%d)\n",middle_point.x, middle_point.y);
-  /// Wait until user exit program by pressing a key
-  //waitKey(0);
   
   return 0;
 }
