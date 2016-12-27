@@ -249,6 +249,8 @@ int main(int argc, char* argv[]) {
       memset(file_path, 0, sizeof(file_path));
       printf("\n------------------End of training phase------------------\n\n");
     }else if(command == 2){
+      clock_t start, end;
+      start = clock();
       printf("\n------------------Running phase------------------\n\n");
       printf("file_path = ");
       scanf("%s", file_path);
@@ -263,8 +265,11 @@ int main(int argc, char* argv[]) {
       classfier_machine(image, Ref_sig);
       
       memset(file_path, 0, sizeof(file_path));
-
+      end = clock();
+      printf("Time usage : %f\n", (float)(end-start)/CLOCKS_PER_SEC);
       printf("\n------------------End of running phase------------------\n\n");
+      
+
     }else if(command == 0){
       printf("------------------Thanks for your using------------------\n");
       break;
